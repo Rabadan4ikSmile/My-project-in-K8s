@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+            claimName: postgres
+      - name: init-sql
+        configMap:
+          name: init-sql
+      initContainers:
+        - image: busybox
+          name: mount-permissions-fix
+          command: ["sh", "-c", "chmod 777 /var/lib/postgresql/data"]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      containers:
+        - image: postgres:10.13
+          name: postgres
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "runners_db"
+            - name: POSTGRES_USER
+              value: "rabadan"
+            - name: PGDATA
+              value: "var/lib/postgresql/data/pgdata"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: password
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d/create_tables.sql
+              subPath: create_tables.sql
+#          readinessProbe:
+#            failureThreshold: 3
+#            httpGet:
+#              path: /
+#              port: 5432
+#            periodSeconds: 10
+#            successThreshold: 1
+#            timeoutSeconds: 1
+#          livenessProbe:
+#            failureThreshold: 3
+#            httpGet:
+#              path: /
+#              port: 5432
+#            periodSeconds: 10
+#            successThreshold: 1
+#            timeoutSeconds: 1
+#            initialDelaySeconds: 10
+      imagePullSecrets:
+        - name: my-registry-credentials
+  strategy:
+    type: Recreate

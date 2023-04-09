@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tgbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tgbot
+  template:
+    metadata:
+      labels:
+        app: tgbot
+    spec:
+      containers:
+        - image: rabadan4ik/tgbot
+          name: tgbot
+#          ports:
+#            - containerPort: 3000
+          env:
+            - name: DATABASE_HOST
+              value: database
+            - name: password
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: password
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: my-registry-credentials
+  strategy:
+    type: Recreate
+

@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-sql
+data:
+  create_tables.sql: |
+    CREATE TABLE IF NOT EXISTS user_data (
+      chat_id bigint not NULL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      gender VARCHAR(10) NOT NULL,
+      age int not NULL
+    );
+    CREATE TABLE IF NOT EXISTS run_result (
+      chat_id bigint not NULL PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      time INTEGER NOT NULL,
+      run_type int NOT NULL,
+      FOREIGN KEY (chat_id) REFERENCES user_data(chat_id)
+    );

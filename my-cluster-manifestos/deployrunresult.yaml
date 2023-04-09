@@ -1,0 +1,50 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webrunresult
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: webrunresult
+  template:
+    metadata:
+      labels:
+        app: webrunresult
+    spec:
+      containers:
+        - image: rabadan4ik/run_result
+          name: webrunresult
+          ports:
+            - containerPort: 80
+          env:
+            - name: DATABASE_HOST
+              value: database
+            - name: password
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-password
+                  key: password
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /run_result
+              port: 5000
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /run_result
+              port: 5000
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+            initialDelaySeconds: 10
+      imagePullSecrets:
+        - name: my-registry-credentials
+  strategy:
+    type: Recreate
+
